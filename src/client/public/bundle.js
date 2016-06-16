@@ -21038,6 +21038,10 @@
 	      });
 	      this.geocoder = new google.maps.Geocoder();
 	      this.marker = new google.maps.Marker({});
+	      this.congLayer = new google.maps.KmlLayer({
+	        url: 'http://www.google.com/maps/d/u/0/kml?mid=1g4GcUoUk9gcYd5ZNHdW3gOFTdAk',
+	        map: this.map
+	      });
 	      console.log("Component mounted.");
 	    }
 	  }, {
@@ -21047,22 +21051,28 @@
 	
 	      this.geocoder.geocode({ address: nextProps.address }, function (results, status) {
 	        if (status == google.maps.GeocoderStatus.OK) {
-	          console.log("Component props received.");
-	          _this2.state.address = nextProps.address;
-	          _this2.map.setCenter(results[0].geometry.location);
-	          _this2.map.setZoom(6);
-	          _this2.marker.setMap(null);
-	          _this2.marker = new google.maps.Marker({
-	            position: results[0].geometry.location,
-	            title: "Hello world!"
-	          });
-	          _this2.marker.setMap(_this2.map);
+	          (function () {
+	            console.log("Component props received.");
+	            _this2.state.address = nextProps.address;
+	            var new_address = results[0].geometry.location;
+	            _this2.map.setCenter(new_address);
+	            _this2.map.setZoom(14);
+	            //this.marker.setMap(null);
+	            //this.marker = new google.maps.Marker({
+	            //  position: new_address,
+	            //  title: "Hello world!"
+	            //});
+	            setTimeout(function () {
+	              google.maps.event.trigger(_this2.congLayer, 'click', { latLng: new_address });
+	            }, 10000);
+	            //this.marker.setMap(this.map);
+	          })();
 	        } else {
-	          console.log("No update.");
-	          console.log(nextProps.address);
-	          console.log(status);
-	          console.log("^ address");
-	        }
+	            console.log("No update.");
+	            console.log(nextProps.address);
+	            console.log(status);
+	            console.log("^ address");
+	          }
 	      });
 	    }
 	  }, {

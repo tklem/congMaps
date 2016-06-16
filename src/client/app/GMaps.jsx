@@ -26,6 +26,10 @@ class GMap extends React.Component {
     });
     this.geocoder = new google.maps.Geocoder();
     this.marker = new google.maps.Marker({});
+    this.congLayer = new google.maps.KmlLayer({
+      url: 'http://www.google.com/maps/d/u/0/kml?mid=1g4GcUoUk9gcYd5ZNHdW3gOFTdAk',
+      map: this.map
+    });
     console.log("Component mounted.");
   }
 
@@ -34,14 +38,18 @@ class GMap extends React.Component {
       if(status == google.maps.GeocoderStatus.OK) {
         console.log("Component props received.");
         this.state.address = nextProps.address;
-        this.map.setCenter(results[0].geometry.location);
-        this.map.setZoom(6);
-        this.marker.setMap(null);
-        this.marker = new google.maps.Marker({
-          position: results[0].geometry.location,
-          title: "Hello world!"
-        });
-        this.marker.setMap(this.map);
+        let new_address = results[0].geometry.location;
+        this.map.setCenter(new_address);
+        this.map.setZoom(14);
+        //this.marker.setMap(null);
+        //this.marker = new google.maps.Marker({
+        //  position: new_address,
+        //  title: "Hello world!"
+        //});
+        setTimeout(() => {
+          google.maps.event.trigger(this.congLayer, 'click', {latLng: new_address});
+        }, 10000);
+        //this.marker.setMap(this.map);
       }
       else {
         console.log("No update.");
