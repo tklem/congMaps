@@ -1,20 +1,21 @@
 import 'babel-polyfill'
-import React from 'react'
-import { render } from 'react-dom'
+import React, { Component } from 'react'
+import ReactDOM  from 'react-dom'
 import { Provider } from 'react-redux'
 import DistrictFinder from './components/DistrictFinder.jsx'
 import configureStore from './store/configureStore.jsx'
 
-const SPRINGFIELD_POSITION = {
-  lat: 39.7817,
-  lng: -89.6501
-};
+let store = configureStore();
 
-const store = configureStore();
+class App extends Component {
+	render() {
+	  return (
+	  	<Provider store={store}>
+	    	<DistrictFinder />
+	  	</Provider>
+	  );
+	}
+}
 
-render(
-  <Provider store={store}>
-    <DistrictFinder />
-  </Provider>,
-  document.getElementById('app')
-)
+ReactDOM.render(<App/>, document.getElementById('app'));
+

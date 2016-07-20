@@ -1,5 +1,4 @@
 import { combineReducers } from 'redux';
-import {reducer as formReducer} from 'redux-form';
 
 const SPRINGFIELD_POSITION = {
   lat: 39.7817,
@@ -62,8 +61,7 @@ function infoChange(state = defaultInfo, action) {
 
 const rootReducer = combineReducers({
 	createMap,
-	infoChange,
-	form: formReducer
+	infoChange
 });
 
 export default rootReducer;
