@@ -1,18 +1,14 @@
 import React, { PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
-import { initializeMaps } from '../actions';
-
-const SPRINGFIELD_POSITION = {
-  lat: 37.2090,
-  lng: -93.2923
-}
+import { initializeMaps, filterDist } from '../actions';
 
 class GMap extends React.Component {
   constructor(props) {
     super(props);
     this.initMap = this.initMap.bind(this);
     this.addDist = this.addDist.bind(this);
+    this.findDist = this.findDist.bind(this);
   }
   
   componentDidMount() {
@@ -24,73 +20,85 @@ class GMap extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { fetchingMaps, mapsLoaded, distMap, succeedCoords } = nextProps;
+    const { 
+      fetchingMaps, 
+      mapsLoaded, 
+      distMap, 
+      succeedCoords, 
+      center, 
+      shouldUpdate, 
+      zipExist,
+      pruneDist, filterDist
+    } = nextProps;
+
     if (!fetchingMaps && mapsLoaded && !distMap) {
-      this.initMap();
+      this.initMap(center);
     }
-    if(succeedCoords && distMap) {
-      this.addDist(distMap);
+    if(succeedCoords && distMap && zipExist && shouldUpdate) {
+      this.addDist(distMap, center, pruneDist, filterDist);
+    }
+    if(!shouldUpdate) {
+      this.findDist(distMap, center);
     }
   }
 
-  initMap() {
+  initMap(nextCenter) {
     this.map = new google.maps.Map(this.refs.map, {
-      center: SPRINGFIELD_POSITION,
+      center: nextCenter,
       zoom: 8,
-      mapTypeId: google.maps.ROADMAP,
     });
-    this.geocoder = new google.maps.Geocoder();
-    this.marker = new google.maps.Marker({});
+    this.marker = new google.maps.Marker({
+      map: this.map
+    });
+    this.ftLayer = new google.maps.FusionTablesLayer({
+      map: this.map
+    })
   }
 
-  addDist(distMap) {
-    const { zipSubmitted } = this.props;
-    this.geocoder.geocode({address: zipSubmitted}, (results, status) => {
-      if(status==='OK') {
-        this.map.panTo(results[0].geometry.location);
-        this.map.setZoom(12);
-        if(this.marker) {
-          this.marker.setMap(null);
-        }
-        this.marker = new google.maps.Marker({
-          map: this.map,
-          position: results[0].geometry.location,
-        })
-      }
-    });
-    this.polyArray = {};
+  addDist(distMap, center, pruneDist, filterDist) {
+    this.map.setCenter(center);
+    this.marker.setPosition(center);
     let distGroup = '(';
-    for(let distNumber in distMap) {
-      let boundary = distMap[distNumber];
-      let mapBoundary = new google.maps.Polygon({
-        paths: boundary,
-        strokeColor: '#FF0000',
-        strokeOpacity: 0.8,
-        strokeWeight: 3,
-        fillColor: '#FF0000',
-        fillOpacity: 0.35
-      });
-      this.polyArray[distNumber] = mapBoundary;
-      distGroup += (distNumber + ',');
+    if(pruneDist) {
+      distGroup += (filterDist + ',');
+    } 
+    else {
+      for(let distNumber in distMap) {
+        distGroup += (distNumber + ',');
+      }
     }
     distGroup = distGroup.slice(0,-1);
     distGroup = ('name IN ' + distGroup + ')');
-    console.log(distGroup);
-    if(this.ftLayer) {
-      this.ftLayer.setMap(null);
-    }
     let ftQuery = {
       from: '15_E5AfGNXK2JhLwhm2p3Cjxsxz1oC2SCYXRiGnTi',
       select: 'geometry',
       where: distGroup
-    }
-    this.ftLayer = new google.maps.FusionTablesLayer({
-      map: this.map,
-      query: ftQuery
-    })
+    };
+    this.ftLayer.setOptions({query: ftQuery});
 
   }
 
+  findDist(distMap, center) {
+    let geomMap = {}
+    for(let distNumber in distMap) {
+      geomMap[distNumber] = new google.maps.Polygon({
+        paths: distMap[distNumber]
+      })
+    }
+    console.log(geomMap);
+    let containingDist = '';
+    for(let geomNumber in geomMap) {
+      let inPoly = google.maps.geometry.poly.containsLocation(center, geomMap[geomNumber])
+      console.log(inPoly)
+      if(inPoly) {
+        containingDist = geomNumber;
+        break;
+      }
+    }
+    console.log(containingDist)
+    const { dispatch } = this.props
+    dispatch(filterDist(containingDist))
+  }
   render() {
     const mapStyle = {
       width: 800,
@@ -111,16 +119,29 @@ GMap.propTypes = {
   fetchingMaps: PropTypes.bool.isRequired,
   mapsLoaded: PropTypes.bool.isRequired,
   succeedCoords: PropTypes.bool.isRequired,
+  zipExist: PropTypes.bool.isRequired,
   distMap: PropTypes.object,
+  center: PropTypes.object.isRequired,
   zipSubmitted: PropTypes.string
 }
 
 function mapStateToProps(state) {
-  const { maps, coords, validateZip } = state
-  const { fetchingMaps, mapsLoaded } = maps
-  const { zipSubmitted } = validateZip
-  const { distMap, succeedCoords } = coords
-  return { fetchingMaps, mapsLoaded, distMap, zipSubmitted, succeedCoords }
+  const { maps, coords, zipcode } = state
+  const { fetchingMaps, mapsLoaded, center, shouldUpdate } = maps
+  const { zipSubmitted, zipExist } = zipcode
+  const { distMap, succeedCoords, pruneDist, filterDist } = coords
+  return { 
+    fetchingMaps, 
+    mapsLoaded, 
+    distMap, 
+    zipSubmitted, 
+    shouldUpdate, 
+    succeedCoords, 
+    center, 
+    zipExist,
+    pruneDist,
+    filterDist
+  }
 }
 
 export default connect(mapStateToProps)(GMap)

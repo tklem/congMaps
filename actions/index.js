@@ -1,37 +1,69 @@
 import fetch from 'isomorphic-fetch'
 import loadGoogleMapsApi from 'load-google-maps-api'
 
-
-function fetchPosts(reddit) {
+export function changeZipcode(zipcode) {
   return dispatch => {
-    dispatch(requestPosts(reddit))
-    return fetch(`https://www.reddit.com/r/${reddit}.json`)
-      .then(response => response.json())
-      .then(json => dispatch(receivePosts(reddit, json)))
-  }
-}
-
-export function changeZipcode(zipCode) {
-  return dispatch => {
-    const isValidZip = /(^\d{5}$)/.test(zipCode);
+    const isValidZip = /(^\d{5}$)/.test(zipcode);
     if(isValidZip) {
-      dispatch(validateZip(zipCode, true))
-      dispatch(fetchCoords(zipCode))
+      dispatch(validateZip(zipcode, true))
+      dispatch(fetchCoords(zipcode))
     }
     else {
-      dispatch(validateZip(zipCode, false))
+      dispatch(validateZip(zipcode, false))
     }
   }
 }
 
-function fetchCoords(zipCode) {
+export function changeAddress(address) {
+  return (dispatch,getState) => {
+    dispatch(requestAddr(address))
+    const geocoder = getState().maps.geocoder
+    const geocoderSearch = address + ' ' + getState().zipcode.zipSubmitted
+    geocoder.geocode({address: geocoderSearch}, (results,status) => {
+      if(status==='OK') {
+        console.log(results);
+        dispatch(changeCenter(results[0].geometry.location, false))
+      }
+      else {
+        dispatch(validateAddr(false))
+      }
+    })
+  }
+}
+
+function requestAddr(address) {
+  console.log(address)
+  return {
+    type: 'ADDR_PENDING',
+    address
+  }
+}
+
+function validateAddr(valid, district) {
+  if(valid) {
+    return {
+      type: 'ADDR_FOUND',
+      filter: district
+    }
+  } else {
+    return {
+      type: 'ADDR_NOT_FOUND',
+    }
+  }
+}
+
+export function filterDist(district) {
+  if(district === '') {
+    return validateAddr(false)
+  } else {
+    return validateAddr(true, district)
+  }
+}
+
+function fetchCoords(zipcode) {
   return dispatch => {
     dispatch(requestCoords())
-    const settings = {
-      mode: 'no-cors',
-      timeout: 10000
-    }
-    return fetch(`http://localhost/stateDist/${zipCode}`)
+    return fetch(`http://localhost/stateDist/${zipcode}`)
       .then(response => {
         if(response.status >= 400) {
           throw new Error('Failed to connect')
@@ -55,35 +87,73 @@ function failedCoords() {
   }
 }
 
-function receiveCoords(json) {
-  return {
-    type: 'COORDS_FULFILLED',
-    districts: json
+function fulfillCoords(json) {
+  switch(Object.keys(json).length) {
+    case 0:
+      return {
+        type: 'COORDS_DNE'
+      }
+    case 1:
+      return {
+        type: 'COORDS_FULFILLED',
+        districts: json
+      }
+    default:
+      return {
+        type: 'COORDS_NEED_ADDR',
+        districts: json
+      }
   }
 } 
 
-function validateZip(zipCode, valid) {
+function changeCenter(center, shouldUpdate) {
+  return {
+    type: 'CHANGE_CENTER',
+    center,
+    shouldUpdate
+  }
+}
+
+function receiveCoords(json) {
+  return (dispatch,getState) => {
+    const geocoder = getState().maps.geocoder;
+    const zipcode = getState().zipcode.zipSubmitted;
+    geocoder.geocode({address: zipcode}, (results,status) => {
+      dispatch(fulfillCoords(json));
+      if(status==='OK') {
+        dispatch(changeCenter(results[0].geometry.location,true))
+      }
+      else {
+        dispatch(validateZip(zipcode,false))
+      }
+    });
+    
+  }
+} 
+
+
+function validateZip(zipcode, valid) {
   if(valid) {
     return {
       type: 'VALID_ZIP',
-      zipCode
+      zipcode
     }
   }
   else {
     return {
       type: 'INVALID_ZIP',
-      zipCode
+      zipcode
     }
   }
 }
-
-
 
 export function initializeMaps() {
   return {
     type:'INIT_MAPS',
     payload: loadGoogleMapsApi({
-      key:'AIzaSyA29vc_lG5Rk4DqLE4yQrEtsuqPEZZxQbw'
+      key:'AIzaSyA29vc_lG5Rk4DqLE4yQrEtsuqPEZZxQbw',
+      libraries: ['geometry']
     })
   };
 }
+
