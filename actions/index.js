@@ -1,12 +1,24 @@
 import fetch from 'isomorphic-fetch'
 import loadGoogleMapsApi from 'load-google-maps-api'
 
+export function initializeMaps() {
+  return {
+    type:'INIT_MAPS',
+    payload: loadGoogleMapsApi({
+      key:'AIzaSyA29vc_lG5Rk4DqLE4yQrEtsuqPEZZxQbw',
+      libraries: ['geometry']
+    })
+  };
+}
+
+
+
 export function changeZipcode(zipcode) {
   return dispatch => {
     const isValidZip = /(^\d{5}$)/.test(zipcode);
     if(isValidZip) {
       dispatch(validateZip(zipcode, true))
-      dispatch(fetchCoords(zipcode))
+      dispatch(fetchDist(zipcode))
     }
     else {
       dispatch(validateZip(zipcode, false))
@@ -21,8 +33,8 @@ export function changeAddress(address) {
     const geocoderSearch = address + ' ' + getState().zipcode.zipSubmitted
     geocoder.geocode({address: geocoderSearch}, (results,status) => {
       if(status==='OK') {
-        console.log(results);
-        dispatch(changeCenter(results[0].geometry.location, false))
+        dispatch(changeCenter(results[0].geometry.location))
+        dispatch(filterDist(results[0].geometry.location))
       }
       else {
         dispatch(validateAddr(false))
@@ -32,7 +44,6 @@ export function changeAddress(address) {
 }
 
 function requestAddr(address) {
-  console.log(address)
   return {
     type: 'ADDR_PENDING',
     address
@@ -43,7 +54,7 @@ function validateAddr(valid, district) {
   if(valid) {
     return {
       type: 'ADDR_FOUND',
-      filter: district
+      distFound: [district,]
     }
   } else {
     return {
@@ -52,18 +63,21 @@ function validateAddr(valid, district) {
   }
 }
 
-export function filterDist(district) {
-  if(district === '') {
-    return validateAddr(false)
-  } else {
-    return validateAddr(true, district)
-  }
-}
-
-function fetchCoords(zipcode) {
-  return dispatch => {
-    dispatch(requestCoords())
-    return fetch(`http://localhost/stateDist/${zipcode}`)
+function filterDist(latLng) {
+  return (dispatch,getState) => {
+    const lat = latLng.lat()
+    const lng = latLng.lng()
+    const districts = getState().districts.distFound
+    console.log(districts)
+    const distParams = districts.map((dist) => { return dist.toString() })
+    console.log(distParams)
+    let distString = '';
+    for(let dist in distParams) {
+      distString += ('dist[]=' + distParams[dist] + '&')
+    }
+    let urlString = `http://localhost/stateDist?` + distString
+    urlString += `point[]=${lng}&point[]=${lat}`
+    return fetch(urlString)
       .then(response => {
         if(response.status >= 400) {
           throw new Error('Failed to connect')
@@ -71,57 +85,73 @@ function fetchCoords(zipcode) {
           return response.json()
         }
       })
-      .then(json => {dispatch(receiveCoords(json))})
+      .then(json => {
+        dispatch(validateAddr(json!==null,json))})
+  }
+
+}
+
+function fetchDist(zipcode) {
+  return dispatch => {
+    dispatch(requestDist())
+    return fetch(`http://localhost/stateDist?zipcode=${zipcode}`)
+      .then(response => {
+        if(response.status >= 400) {
+          throw new Error('Failed to connect')
+        } else {
+          return response.json()
+        }
+      })
+      .then(json => {dispatch(receiveDist(json))})
   }
 }
 
-function requestCoords() {
+function requestDist() {
   return {
-    type: 'COORDS_PENDING'
+    type: 'DIST_PENDING'
   }
 }
 
-function failedCoords() {
+function failedDist() {
   return {
-    type: 'COORDS_REJECTED'
+    type: 'DIST_REJECTED'
   }
 }
 
-function fulfillCoords(json) {
+function fulfillDist(json) {
   switch(Object.keys(json).length) {
     case 0:
       return {
-        type: 'COORDS_DNE'
+        type: 'DIST_DNE'
       }
     case 1:
       return {
-        type: 'COORDS_FULFILLED',
-        districts: json
+        type: 'DIST_FULFILLED',
+        distFound: json
       }
     default:
       return {
-        type: 'COORDS_NEED_ADDR',
-        districts: json
+        type: 'DIST_NEED_ADDR',
+        distFound: json
       }
   }
 } 
 
-function changeCenter(center, shouldUpdate) {
+function changeCenter(center) {
   return {
     type: 'CHANGE_CENTER',
-    center,
-    shouldUpdate
+    center
   }
 }
 
-function receiveCoords(json) {
+function receiveDist(json) {
   return (dispatch,getState) => {
     const geocoder = getState().maps.geocoder;
     const zipcode = getState().zipcode.zipSubmitted;
     geocoder.geocode({address: zipcode}, (results,status) => {
-      dispatch(fulfillCoords(json));
+      dispatch(fulfillDist(json));
       if(status==='OK') {
-        dispatch(changeCenter(results[0].geometry.location,true))
+        dispatch(changeCenter(results[0].geometry.location))
       }
       else {
         dispatch(validateZip(zipcode,false))
@@ -145,15 +175,5 @@ function validateZip(zipcode, valid) {
       zipcode
     }
   }
-}
-
-export function initializeMaps() {
-  return {
-    type:'INIT_MAPS',
-    payload: loadGoogleMapsApi({
-      key:'AIzaSyA29vc_lG5Rk4DqLE4yQrEtsuqPEZZxQbw',
-      libraries: ['geometry']
-    })
-  };
 }
 

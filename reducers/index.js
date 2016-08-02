@@ -12,7 +12,7 @@ function address(state = {
   addrFound: true
 }, action) {
   switch(action.type) {
-    case 'COORDS_NEED_ADDR':
+    case 'DIST_NEED_ADDR':
       return Object.assign({}, state, {
         addrNeeded: true
       })
@@ -38,7 +38,6 @@ function address(state = {
 function maps(state = {
   fetchingMaps: false,
   mapsLoaded: false,
-  shouldUpdate: true,
   center: SPRINGFIELD_POSITION,
   geocoder: null
 }, action) {
@@ -86,15 +85,15 @@ function zipcode(state = {
         zipSubmitted: action.zipcode,
         validZip: true
       })
-    case 'COORDS_FULFILLED':
+    case 'DIST_FULFILLED':
       return Object.assign({}, state, {
         zipExist: true,
       })
-    case 'COORDS_DNE':
+    case 'DIST_DNE':
       return Object.assign({}, state, {
         zipExist: false,
       })
-    case 'COORDS_NEED_ADDR':
+    case 'DIST_NEED_ADDR':
       return Object.assign({}, state, {
         zipExist: true,
       })
@@ -102,41 +101,34 @@ function zipcode(state = {
   }
 }
 
-function coords(state = {
-  loadingCoords: false,
-  succeedCoords: true,
-  distMap: null,
-  pruneDist: false,
-  filterDist: ''
+function districts(state = {
+  loadingDist: false,
+  succeedDist: true,
+  distFound: [],
 }, action) {
   switch(action.type) {
-    case 'COORDS_PENDING':
+    case 'DIST_PENDING':
       return Object.assign({}, state, {
-        loadingCoords: true,
-        succeedCoords: false
+        loadingDist: true,
+        succeedDist: false
       })
-    case 'COORDS_REJECTED':
+    case 'DIST_REJECTED':
       return Object.assign({}, state, {
-        loadingCoords: false,
-        succeedCoords: false
+        loadingDist: false,
+        succeedDist: false
       })
-    case 'COORDS_FULFILLED':
-    case 'COORDS_NEED_ADDR':
-      return Object.assign({}, state, {
-        loadingCoords: false,
-        succeedCoords: true,
-        pruneDist: false,
-        distMap: action.districts
-      })
-    case 'COORDS_DNE':
-      return Object.assign({}, state, {
-        loadingCoords: false,
-        succeedCoords: true,
-      })
+    case 'DIST_FULFILLED':
+    case 'DIST_NEED_ADDR':
     case 'ADDR_FOUND':
       return Object.assign({}, state, {
-        pruneDist: true,
-        filterDist: action.filter
+        loadingDist: false,
+        succeedDist: true,
+        distFound: action.distFound
+      })
+    case 'DIST_DNE':
+      return Object.assign({}, state, {
+        loadingDist: false,
+        succeedDist: true,
       })
     default: return state
   }
@@ -145,7 +137,7 @@ function coords(state = {
 const rootReducer = combineReducers({
   maps,
   zipcode,
-  coords,
+  districts,
   address
 })
 

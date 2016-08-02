@@ -1,14 +1,13 @@
 import React, { PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
-import { initializeMaps, filterDist } from '../actions';
+import { initializeMaps } from '../actions';
 
 class GMap extends React.Component {
   constructor(props) {
     super(props);
     this.initMap = this.initMap.bind(this);
     this.addDist = this.addDist.bind(this);
-    this.findDist = this.findDist.bind(this);
   }
   
   componentDidMount() {
@@ -23,22 +22,17 @@ class GMap extends React.Component {
     const { 
       fetchingMaps, 
       mapsLoaded, 
-      distMap, 
-      succeedCoords, 
+      distFound, 
+      succeedDist, 
       center, 
-      shouldUpdate, 
-      zipExist,
-      pruneDist, filterDist
+      zipExist
     } = nextProps;
 
-    if (!fetchingMaps && mapsLoaded && !distMap) {
+    if (!fetchingMaps && mapsLoaded && !distFound.length) {
       this.initMap(center);
     }
-    if(succeedCoords && distMap && zipExist && shouldUpdate) {
-      this.addDist(distMap, center, pruneDist, filterDist);
-    }
-    if(!shouldUpdate) {
-      this.findDist(distMap, center);
+    if(succeedDist && distFound.length && zipExist) {
+      this.addDist(distFound, center);
     }
   }
 
@@ -55,20 +49,16 @@ class GMap extends React.Component {
     })
   }
 
-  addDist(distMap, center, pruneDist, filterDist) {
+  addDist(distFound, center) {
     this.map.setCenter(center);
     this.marker.setPosition(center);
-    let distGroup = '(';
-    if(pruneDist) {
-      distGroup += (filterDist + ',');
-    } 
-    else {
-      for(let distNumber in distMap) {
-        distGroup += (distNumber + ',');
-      }
+    let distGroup = '('; 
+    for(let distNumber in distFound) {
+      distGroup += (distFound[distNumber] + ',');
     }
     distGroup = distGroup.slice(0,-1);
     distGroup = ('name IN ' + distGroup + ')');
+    console.log(distGroup)
     let ftQuery = {
       from: '15_E5AfGNXK2JhLwhm2p3Cjxsxz1oC2SCYXRiGnTi',
       select: 'geometry',
@@ -78,27 +68,6 @@ class GMap extends React.Component {
 
   }
 
-  findDist(distMap, center) {
-    let geomMap = {}
-    for(let distNumber in distMap) {
-      geomMap[distNumber] = new google.maps.Polygon({
-        paths: distMap[distNumber]
-      })
-    }
-    console.log(geomMap);
-    let containingDist = '';
-    for(let geomNumber in geomMap) {
-      let inPoly = google.maps.geometry.poly.containsLocation(center, geomMap[geomNumber])
-      console.log(inPoly)
-      if(inPoly) {
-        containingDist = geomNumber;
-        break;
-      }
-    }
-    console.log(containingDist)
-    const { dispatch } = this.props
-    dispatch(filterDist(containingDist))
-  }
   render() {
     const mapStyle = {
       width: 800,
@@ -118,29 +87,26 @@ class GMap extends React.Component {
 GMap.propTypes = {
   fetchingMaps: PropTypes.bool.isRequired,
   mapsLoaded: PropTypes.bool.isRequired,
-  succeedCoords: PropTypes.bool.isRequired,
+  succeedDist: PropTypes.bool.isRequired,
   zipExist: PropTypes.bool.isRequired,
-  distMap: PropTypes.object,
+  distFound: PropTypes.array,
   center: PropTypes.object.isRequired,
   zipSubmitted: PropTypes.string
 }
 
 function mapStateToProps(state) {
-  const { maps, coords, zipcode } = state
-  const { fetchingMaps, mapsLoaded, center, shouldUpdate } = maps
+  const { maps, districts, zipcode } = state
+  const { fetchingMaps, mapsLoaded, center } = maps
   const { zipSubmitted, zipExist } = zipcode
-  const { distMap, succeedCoords, pruneDist, filterDist } = coords
+  const { distFound, succeedDist } = districts
   return { 
     fetchingMaps, 
     mapsLoaded, 
-    distMap, 
+    distFound, 
     zipSubmitted, 
-    shouldUpdate, 
-    succeedCoords, 
+    succeedDist, 
     center, 
-    zipExist,
-    pruneDist,
-    filterDist
+    zipExist
   }
 }
 
