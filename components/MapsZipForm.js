@@ -27,7 +27,7 @@ class MapsZipForm extends React.Component {
   }
 
   render() {
-    const { zipSubmitted, validZip, loadingDist } = this.props
+    const { zipSubmitted, validZip, loadingDist, addrPending } = this.props
     return (
       <div>
         <form className="zipForm" onSubmit={this.handleSubmit}>
@@ -40,7 +40,7 @@ class MapsZipForm extends React.Component {
           <input 
             type="submit" 
             value="Submit"
-            disabled={loadingDist}
+            disabled={loadingDist || addrPending}
           />
         </form>
         <p> {!validZip && `${zipSubmitted} is not a valid zipcode!`} </p>
@@ -53,14 +53,16 @@ MapsZipForm.propTypes = {
   dispatch: PropTypes.func.isRequired,
   zipSubmitted: PropTypes.string.isRequired,
   validZip: PropTypes.bool.isRequired,
-  loadingDist: PropTypes.bool.isRequired
+  loadingDist: PropTypes.bool.isRequired,
+  addrPending: PropTypes.bool.isRequired
 };
 
 function mapStateToProps(state) {
-  const { zipcode, districts } = state
+  const { zipcode, districts, address } = state
   const { zipSubmitted, validZip } = zipcode
   const { loadingDist } = districts
-  return { zipSubmitted, validZip, loadingDist }
+  const { addrPending } = address
+  return { zipSubmitted, validZip, loadingDist, addrPending }
 }
 
 export default connect(mapStateToProps)(MapsZipForm);

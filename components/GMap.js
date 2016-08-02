@@ -39,7 +39,7 @@ class GMap extends React.Component {
   initMap(nextCenter) {
     this.map = new google.maps.Map(this.refs.map, {
       center: nextCenter,
-      zoom: 8,
+      zoom: 5,
     });
     this.marker = new google.maps.Marker({
       map: this.map
@@ -51,6 +51,7 @@ class GMap extends React.Component {
 
   addDist(distFound, center) {
     this.map.setCenter(center);
+    this.map.setZoom(11);
     this.marker.setPosition(center);
     let distGroup = '('; 
     for(let distNumber in distFound) {

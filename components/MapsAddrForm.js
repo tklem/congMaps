@@ -35,7 +35,7 @@ class MapsAddrForm extends React.Component {
   }
 
   render() {
-    const { addrSubmitted, addrFound, addrPending } = this.props
+    const { addrSubmitted, addrFound, addrPending, loadingDist } = this.props
     return (
       <div>
         <form className="addrForm" onSubmit={this.handleSubmit}>
@@ -54,7 +54,7 @@ class MapsAddrForm extends React.Component {
           <input 
             type="submit" 
             value="Submit"
-            disabled={addrPending}
+            disabled={addrPending || loadingDist}
           />
         </form>
         <p> {!addrFound && `The address you submitted was not found in your zipcode!`} </p>
@@ -67,13 +67,15 @@ MapsAddrForm.propTypes = {
   dispatch: PropTypes.func.isRequired,
   addrSubmitted: PropTypes.string.isRequired,
   addrFound: PropTypes.bool.isRequired,
-  addrPending: PropTypes.bool.isRequired
+  addrPending: PropTypes.bool.isRequired,
+  loadingDist: PropTypes.bool.isRequired
 };
 
 function mapStateToProps(state) {
-  const { address } = state
+  const { address, districts } = state
   const { addrSubmitted, addrFound, addrPending } = address
-  return { addrSubmitted, addrFound, addrPending }
+  const { loadingDist } = districts
+  return { addrSubmitted, addrFound, addrPending, loadingDist }
 }
 
 export default connect(mapStateToProps)(MapsAddrForm);

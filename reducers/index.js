@@ -12,6 +12,11 @@ function address(state = {
   addrFound: true
 }, action) {
   switch(action.type) {
+    case 'DIST_FULFILLED':
+      return Object.assign({}, state, {
+        addrNeeded: false
+      })
+
     case 'DIST_NEED_ADDR':
       return Object.assign({}, state, {
         addrNeeded: true
