@@ -73,10 +73,10 @@ function filterDist(latLng) {
     console.log(distParams)
     let distString = '';
     for(let dist in distParams) {
-      distString += ('dist[]=' + distParams[dist] + '&')
+      distString += ('dist=' + distParams[dist] + '&')
     }
-    let urlString = `http://localhost/stateDist?` + distString
-    urlString += `point[]=${lng}&point[]=${lat}`
+    let urlString = `http://127.0.0.1:8000/pruneDist?` + distString
+    urlString += `lng=${lng}&lat=${lat}`
     return fetch(urlString)
       .then(response => {
         if(response.status >= 400) {
@@ -94,7 +94,7 @@ function filterDist(latLng) {
 function fetchDist(zipcode) {
   return dispatch => {
     dispatch(requestDist())
-    return fetch(`http://localhost/stateDist?zipcode=${zipcode}`)
+    return fetch(`http://127.0.0.1:8000/findDist/${zipcode}`)
       .then(response => {
         if(response.status >= 400) {
           throw new Error('Failed to connect')
