@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { selectReddit, changeZipcode } from '../actions'
+import { Form, FormGroup, FormControl, Button } from 'react-bootstrap'
 
 class MapsZipForm extends React.Component {
   constructor(props) {
@@ -28,21 +29,24 @@ class MapsZipForm extends React.Component {
 
   render() {
     const { zipSubmitted, validZip, loadingDist, addrPending } = this.props
+
     return (
-      <div>
-        <form className="zipForm" onSubmit={this.handleSubmit}>
-          <input
-            type="text"
-            placeholder="Your zipcode"
-            value={this.state.zipField}
-            onChange={this.handleZipChange}
-          />
-          <input 
-            type="submit" 
-            value="Submit"
-            disabled={loadingDist || addrPending}
-          />
-        </form>
+      <div style={{margin:'1em'}}>
+        <Form inline onSubmit={this.handleSubmit} className="text-center">
+          <FormGroup controlId="formInlineZip" bsSize="large">
+            <FormControl
+              type="text"
+              placeholder="Your zipcode"
+              className="form-control"
+              value={this.state.zipField}
+              onChange={this.handleZipChange}
+            />
+          </FormGroup>
+          {' '}
+          <Button bsStyle="primary" bsSize="large" type="submit" disabled={loadingDist || addrPending}>
+            Submit
+          </Button>
+        </Form>
         <p> {!validZip && `${zipSubmitted} is not a valid zipcode!`} </p>
       </div>
     );

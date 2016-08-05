@@ -1,6 +1,7 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { selectReddit, changeAddress } from '../actions'
+import { Form, FormGroup, FormControl, Button } from 'react-bootstrap'
 
 class MapsAddrForm extends React.Component {
   constructor(props) {
@@ -36,32 +37,44 @@ class MapsAddrForm extends React.Component {
 
   render() {
     const { addrSubmitted, addrFound, addrPending, loadingDist } = this.props
+
     return (
-      <div>
-        <form className="addrForm" onSubmit={this.handleSubmit}>
-          <input
-            type="text"
-            placeholder="Your street address"
-            value={this.state.streetField}
-            onChange={this.handleStreetChange}
-          />
-          <input
-            type="text"
-            placeholder="Your city"
-            value={this.state.cityField}
-            onChange={this.handleCityChange}
-          />
-          <input 
+      <div style={{margin:'1em'}}>
+        <Form inline className="text-center" onSubmit={this.handleSubmit}>
+          <FormGroup controlId="formInlineAddr" bsSize="large">
+            <FormControl
+              type="text"
+              placeholder="Your street address"
+              className="form-control"
+              value={this.state.streetField}
+              onChange={this.handleStreetChange}
+            />
+          </FormGroup>
+          {' '}
+          <FormGroup controlId="forInlineCity" bsSize="large">
+            <FormControl
+              type="text"
+              placeholder="Your city"
+              className="form-control"
+              value={this.state.cityField}
+              onChange={this.handleCityChange}
+            />
+          </FormGroup>
+          {' '}
+          <Button 
             type="submit" 
-            value="Submit"
-            disabled={addrPending || loadingDist}
-          />
-        </form>
+            bsStyle="primary"
+            bsSize="large"
+            disabled={addrPending || loadingDist}>
+            Submit
+          </Button>
+        </Form>
         <p> {!addrFound && `The address you submitted was not found in your zipcode!`} </p>
       </div>
     );
   }
 }
+
 
 MapsAddrForm.propTypes = {
   dispatch: PropTypes.func.isRequired,

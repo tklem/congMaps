@@ -3,6 +3,7 @@ import GMap from '../components/GMap'
 import MapsZipForm from '../components/MapsZipForm'
 import MapsAddrForm from '../components/MapsAddrForm'
 import { connect } from 'react-redux'
+import Header from '../components/Header'
 
 class DistrictFinder extends Component {
   constructor(props) {
@@ -13,7 +14,7 @@ class DistrictFinder extends Component {
     const { addrNeeded } = this.props;
     return (
       <div>
-        <h1>Find your district!</h1>
+        <Header />
         <GMap />
         <MapsZipForm />
         {addrNeeded && <MapsAddrForm />}

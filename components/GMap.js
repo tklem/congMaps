@@ -71,10 +71,11 @@ class GMap extends React.Component {
 
   render() {
     const mapStyle = {
-      width: 800,
-      height: 600,
+      width: '60em',
+      height: '45em',
       border: '1px solid black',
-      display: 'block'
+      display: 'block',
+      margin: '0px auto'
     };
     
     return (
