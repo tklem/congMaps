@@ -1,6 +1,8 @@
 import React, { PropTypes } from 'react';
 import { connect } from 'react-redux';
-import { Row, Alert } from 'react-bootstrap';
+import Row from 'react-bootstrap/lib/Row'
+import Alert from 'react-bootstrap/lib/Alert'
+
 
 class DistrictNotice extends React.Component {
   render() {

@@ -1,7 +1,13 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { selectReddit, changeZipcode } from '../actions'
-import { Form, FormGroup, FormControl, Button } from 'react-bootstrap'
+import Form from 'react-bootstrap/lib/Form'
+import FormGroup from 'react-bootstrap/lib/FormGroup'
+import FormControl from 'react-bootstrap/lib/FormControl'
+import Button from 'react-bootstrap/lib/Button'
+import Alert from 'react-bootstrap/lib/Alert'
+import Glyphicon from 'react-bootstrap/lib/Glyphicon'
+import Row from 'react-bootstrap/lib/Row'
 
 class MapsZipForm extends React.Component {
   constructor(props) {
@@ -28,26 +34,42 @@ class MapsZipForm extends React.Component {
   }
 
   render() {
-    const { zipSubmitted, validZip, loadingDist, addrPending } = this.props
+    const { validZip, loadingDist, addrPending, zipExist } = this.props
+
+    const margin = {
+      margin: '1em'
+    }
 
     return (
-      <div style={{margin:'1em'}}>
-        <Form inline onSubmit={this.handleSubmit} className="text-center">
-          <FormGroup controlId="formInlineZip" bsSize="large">
-            <FormControl
-              type="text"
-              placeholder="Your zipcode"
-              className="form-control"
-              value={this.state.zipField}
-              onChange={this.handleZipChange}
-            />
-          </FormGroup>
-          {' '}
-          <Button bsStyle="primary" bsSize="large" type="submit" disabled={loadingDist || addrPending}>
-            Submit
-          </Button>
-        </Form>
-        <p> {!validZip && `${zipSubmitted} is not a valid zipcode!`} </p>
+      <div>
+        <p className="text-center lead">Get started by entering your zipcode below.</p>
+        <Row style={margin}>
+          <Form inline onSubmit={this.handleSubmit} className="text-center">
+            <FormGroup controlId="formInlineZip" bsSize="large">
+              <FormControl
+                type="text"
+                placeholder="Your zipcode"
+                className="form-control"
+                value={this.state.zipField}
+                onChange={this.handleZipChange}
+              />
+            </FormGroup>
+            {' '}
+            <Button bsStyle="primary" bsSize="large" type="submit" disabled={loadingDist || addrPending}>
+              {(addrPending || loadingDist) ? 'Loading...' : 'Submit'}
+            </Button>
+          </Form>
+          {!validZip && 
+            <Alert bsStyle="danger" style={margin}>
+              <Glyphicon glyph="minus-sign"/> Please enter a valid zipcode.
+            </Alert>
+          }
+          {!zipExist && 
+            <Alert bsStyle="danger" style={margin}>
+              <Glyphicon glyph="minus-sign"/> Sorry, that zipcode is not supported right now.
+            </Alert>
+          }
+        </Row>
       </div>
     );
   }
@@ -57,16 +79,17 @@ MapsZipForm.propTypes = {
   dispatch: PropTypes.func.isRequired,
   zipSubmitted: PropTypes.string.isRequired,
   validZip: PropTypes.bool.isRequired,
+  zipExist: PropTypes.bool.isRequired,
   loadingDist: PropTypes.bool.isRequired,
   addrPending: PropTypes.bool.isRequired
 };
 
 function mapStateToProps(state) {
   const { zipcode, districts, address } = state
-  const { zipSubmitted, validZip } = zipcode
+  const { zipSubmitted, validZip, zipExist } = zipcode
   const { loadingDist } = districts
   const { addrPending } = address
-  return { zipSubmitted, validZip, loadingDist, addrPending }
+  return { zipSubmitted, validZip, loadingDist, addrPending, zipExist }
 }
 
 export default connect(mapStateToProps)(MapsZipForm);

@@ -1,11 +1,12 @@
 import fetch from 'isomorphic-fetch'
 import loadGoogleMapsApi from 'load-google-maps-api'
+import * as constants from '../constants'
 
 export function initializeMaps() {
   return {
     type:'INIT_MAPS',
     payload: loadGoogleMapsApi({
-      key:'AIzaSyA29vc_lG5Rk4DqLE4yQrEtsuqPEZZxQbw',
+      key:constants.API_KEY,
       libraries: ['geometry']
     })
   };
@@ -75,7 +76,7 @@ function filterDist(latLng) {
     for(let dist in distParams) {
       distString += ('dist=' + distParams[dist] + '&')
     }
-    let urlString = `http://127.0.0.1:8000/pruneDist?` + distString
+    let urlString = `http://district-finder-dev.us-west-2.elasticbeanstalk.com/pruneDist?` + distString
     urlString += `lng=${lng}&lat=${lat}`
     return fetch(urlString)
       .then(response => {
@@ -94,7 +95,7 @@ function filterDist(latLng) {
 function fetchDist(zipcode) {
   return dispatch => {
     dispatch(requestDist())
-    return fetch(`http://127.0.0.1:8000/findDist/${zipcode}`)
+    return fetch(`http://district-finder-dev.us-west-2.elasticbeanstalk.com/findDist/${zipcode}`)
       .then(response => {
         if(response.status >= 400) {
           throw new Error('Failed to connect')

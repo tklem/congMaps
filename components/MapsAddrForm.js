@@ -1,7 +1,13 @@
 import React, { Component, PropTypes } from 'react';
 import { connect } from 'react-redux';
 import { selectReddit, changeAddress } from '../actions'
-import { Form, FormGroup, FormControl, Button } from 'react-bootstrap'
+import Form from 'react-bootstrap/lib/Form'
+import FormGroup from 'react-bootstrap/lib/FormGroup'
+import FormControl from 'react-bootstrap/lib/FormControl'
+import Button from 'react-bootstrap/lib/Button'
+import Row from 'react-bootstrap/lib/Row'
+import Alert from 'react-bootstrap/lib/Alert'
+import Glyphicon from 'react-bootstrap/lib/Glyphicon'
 
 class MapsAddrForm extends React.Component {
   constructor(props) {
@@ -39,37 +45,55 @@ class MapsAddrForm extends React.Component {
     const { addrSubmitted, addrFound, addrPending, loadingDist } = this.props
 
     return (
-      <div style={{margin:'1em'}}>
+      <div>
+        <Row style={{margin:'1em', marginTop: '2em', borderTop:'1px solid gray'}}>
+          <p className="text-center lead" style={{margin:'1em'}}>
+            Your zipcode contains more than one district. <br/>
+            Please enter your address and city.
+          </p>
+        </Row>
+
         <Form inline className="text-center" onSubmit={this.handleSubmit}>
-          <FormGroup controlId="formInlineAddr" bsSize="large">
-            <FormControl
-              type="text"
-              placeholder="Your street address"
-              className="form-control"
-              value={this.state.streetField}
-              onChange={this.handleStreetChange}
-            />
-          </FormGroup>
+          <Row style={{margin:'1em'}}>
+            <FormGroup controlId="formInlineAddr" bsSize="large">
+              <FormControl
+                type="text"
+                placeholder="Your street address"
+                className="form-control"
+                value={this.state.streetField}
+                onChange={this.handleStreetChange}
+              />
+            </FormGroup>
+            {' '}
+            <FormGroup controlId="forInlineCity" bsSize="large">
+              <FormControl
+                type="text"
+                placeholder="Your city"
+                className="form-control"
+                value={this.state.cityField}
+                onChange={this.handleCityChange}
+              />
+            </FormGroup>
+          </Row>
           {' '}
-          <FormGroup controlId="forInlineCity" bsSize="large">
-            <FormControl
-              type="text"
-              placeholder="Your city"
-              className="form-control"
-              value={this.state.cityField}
-              onChange={this.handleCityChange}
-            />
-          </FormGroup>
-          {' '}
-          <Button 
-            type="submit" 
-            bsStyle="primary"
-            bsSize="large"
-            disabled={addrPending || loadingDist}>
-            Submit
-          </Button>
+          <Row style={{margin:'1em'}}>
+            <Button 
+              type="submit" 
+              bsStyle="primary"
+              bsSize="large"
+              disabled={addrPending || loadingDist}>
+              {(addrPending || loadingDist) ? 'Loading...' : 'Submit'}
+            </Button>
+          </Row>
         </Form>
-        <p> {!addrFound && `The address you submitted was not found in your zipcode!`} </p>
+        {!addrFound &&
+          <Row style={{margin: '1em'}}>
+            <Alert bsStyle="danger" style={{margin: '1em'}}>
+              <Glyphicon glyph="minus-sign"/>
+              The address you submitted was not found in your zipcode!
+            </Alert>
+          </Row>
+        }
       </div>
     );
   }

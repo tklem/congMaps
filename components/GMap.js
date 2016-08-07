@@ -1,5 +1,4 @@
 import React, { PropTypes } from 'react';
-import ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { initializeMaps } from '../actions';
 
@@ -59,7 +58,6 @@ class GMap extends React.Component {
     }
     distGroup = distGroup.slice(0,-1);
     distGroup = ('name IN ' + distGroup + ')');
-    console.log(distGroup)
     let ftQuery = {
       from: '15_E5AfGNXK2JhLwhm2p3Cjxsxz1oC2SCYXRiGnTi',
       select: 'geometry',
@@ -71,13 +69,9 @@ class GMap extends React.Component {
 
   render() {
     const mapStyle = {
-      width: '60em',
-      height: '45em',
       border: '1px solid black',
-      display: 'block',
-      margin: '0px auto'
-    };
-    
+      paddingBottom: '62.5%'
+    }
     return (
       <div>
         <div ref="map" style={mapStyle}></div>
