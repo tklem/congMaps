@@ -1,0 +1,3 @@
+#!/home/tklem/django-react-redux-jwt-base/virtualenv/bin/python3
+from requirements_detector.run import run
+run()
